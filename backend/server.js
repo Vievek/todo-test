@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.js";
-import todoRoutes from "./routes/todos.js";
+import todoRoutes from "./routes/todo.js";
 import { setupSwagger } from "./utils/swagger.js";
 import errorHandler from "./middlewares/errorHandler.js";
 
