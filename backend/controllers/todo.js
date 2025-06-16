@@ -1,4 +1,5 @@
 import Todo from "../models/Todo.js";
+import { validateTodoInput } from "../utils/validate.js";
 
 export const getTodos = async (req, res) => {
   try {
@@ -10,14 +11,24 @@ export const getTodos = async (req, res) => {
 };
 
 export const createTodo = async (req, res) => {
-  const todo = req.body;
-  const newTodo = new Todo({ ...todo, user: req.userId });
+  const { title } = req.body;
+
+  // Validate input
+  const { errors, valid } = validateTodoInput(title);
+  if (!valid) {
+    return res.status(400).json({ errors });
+  }
 
   try {
-    await newTodo.save();
-    res.status(201).json(newTodo);
+    const todo = new Todo({
+      title,
+      user: req.userId,
+    });
+
+    await todo.save();
+    res.status(201).json(todo);
   } catch (error) {
-    res.status(409).json({ message: error.message });
+    res.status(500).json({ message: "Server error" });
   }
 };
 

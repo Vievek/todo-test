@@ -1,69 +1,75 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import {
+  validateRegisterInput,
+  validateLoginInput,
+} from "../utils/validate.js";
 
 export const register = async (req, res) => {
-  try {
-    const { username, password } = req.body;
+  const { username, password } = req.body;
 
+  // Validate input
+  const { errors, valid } = validateRegisterInput(username, password);
+  if (!valid) {
+    return res.status(400).json({ errors });
+  }
+
+  try {
     // Check if user exists
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res
+        .status(400)
+        .json({ errors: { username: "Username already exists" } });
     }
 
-    // Hash password
+    // Hash password and create user
     const hashedPassword = await bcrypt.hash(password, 12);
+    const user = await User.create({ username, password: hashedPassword });
 
-    // Create user
-    const user = await User.create({
-      username,
-      password: hashedPassword,
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
 
-    // Create token
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.status(201).json({ result: user, token });
+    res.status(201).json({ user, token });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong" });
-    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 export const login = async (req, res) => {
+  const { username, password } = req.body;
+
+  // Validate input
+  const { errors, valid } = validateLoginInput(username, password);
+  if (!valid) {
+    return res.status(400).json({ errors });
+  }
+
   try {
-    const { username, password } = req.body;
-
     // Check if user exists
-    const existingUser = await User.findOne({ username });
-    if (!existingUser) {
-      return res.status(404).json({ message: "User not found" });
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ errors: { username: "User not found" } });
     }
 
-    // Check password
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      existingUser.password
-    );
-    if (!isPasswordCorrect) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ errors: { password: "Invalid credentials" } });
     }
 
-    // Create token
-    const token = jwt.sign(
-      { id: existingUser._id, username: existingUser.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
-    res.status(200).json({ result: existingUser, token });
+    res.status(200).json({ user, token });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong" });
-    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
