@@ -9,13 +9,20 @@ vi.mock("../context/AuthContext", () => ({
 }));
 
 // Mock the todos service
-vi.mock("../services/todos");
+vi.mock("../services/todos", () => ({
+  getTodos: vi.fn(),
+  createTodo: vi.fn(),
+  updateTodo: vi.fn(),
+  deleteTodo: vi.fn(),
+}));
 
 describe("Dashboard", () => {
   beforeEach(() => {
     useAuth.mockReturnValue({
       user: { username: "testuser" },
       logout: vi.fn(),
+      loading: false,
+      error: null,
     });
   });
 
@@ -35,6 +42,7 @@ describe("Dashboard", () => {
     await waitFor(() => {
       expect(screen.getByText("Test Todo")).toBeInTheDocument();
     });
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });
 
   it("displays error message when fetch fails", async () => {

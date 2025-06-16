@@ -1,7 +1,15 @@
 import { getTodos, createTodo, updateTodo, deleteTodo } from "./todos";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import api from "./api";
 
-vi.mock("./api");
+vi.mock("./api", () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
 
 describe("todos service", () => {
   afterEach(() => {

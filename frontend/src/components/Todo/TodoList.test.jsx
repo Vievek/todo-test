@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import TodoList from "./TodoList";
+import { describe, it, expect, vi, afterEach } from "vitest";
 
 describe("TodoList", () => {
   const mockTodos = [
@@ -9,6 +10,10 @@ describe("TodoList", () => {
 
   const mockOnToggle = vi.fn();
   const mockOnDelete = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it("renders empty state when no todos", () => {
     render(<TodoList todos={[]} />);
