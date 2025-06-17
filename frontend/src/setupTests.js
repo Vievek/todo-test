@@ -5,43 +5,35 @@ import { vi } from "vitest";
 const localStorageMock = (() => {
   let store = {};
   return {
-    getItem: vi.fn((key) => store[key]),
-    setItem: vi.fn((key, value) => {
+    getItem: (key) => store[key],
+    setItem: (key, value) => {
       store[key] = value.toString();
-    }),
-    removeItem: vi.fn((key) => {
+    },
+    removeItem: (key) => {
       delete store[key];
-    }),
-    clear: vi.fn(() => {
+    },
+    clear: () => {
       store = {};
-    }),
+    },
   };
 })();
 
-Object.defineProperty(window, "localStorage", {
-  value: localStorageMock,
-});
+global.localStorage = localStorageMock;
 
 // Mock matchMedia
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: vi.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+global.matchMedia =
+  global.matchMedia ||
+  function () {
+    return {
+      matches: false,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    };
+  };
 
 // Mock ResizeObserver
-class ResizeObserver {
+global.ResizeObserver = class ResizeObserver {
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();
-}
-
-window.ResizeObserver = ResizeObserver;
+};
