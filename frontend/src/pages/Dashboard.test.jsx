@@ -1,33 +1,40 @@
+import { vi } from "vitest";
+
+// Mock todos module before imports
+vi.mock("../services/todos");
+
 import { render, screen, waitFor } from "@testing-library/react";
 import Dashboard from "./Dashboard";
-import { useAuth } from "../context/AuthContext";
+import * as AuthContext from "../context/AuthContext";
 import * as todosAPI from "../services/todos";
 
-// Mock the useAuth hook
-vi.mock("../context/AuthContext", () => ({
-  useAuth: vi.fn(),
-}));
-
-// Mock the todos service
-vi.mock("../services/todos", () => ({
-  getTodos: vi.fn(),
-  createTodo: vi.fn(),
-  updateTodo: vi.fn(),
-  deleteTodo: vi.fn(),
-}));
-
 describe("Dashboard", () => {
+  let useAuthSpy;
+  let getTodosSpy;
+
   beforeEach(() => {
-    useAuth.mockReturnValue({
+    useAuthSpy = vi.spyOn(AuthContext, "useAuth").mockReturnValue({
       user: { username: "testuser" },
       logout: vi.fn(),
       loading: false,
       error: null,
     });
+
+    getTodosSpy = vi.spyOn(todosAPI, "getTodos");
   });
 
-  it("displays loading state initially", async () => {
-    todosAPI.getTodos.mockImplementation(() => new Promise(() => {}));
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("displays loading state initially", () => {
+    getTodosSpy.mockImplementation(() => new Promise(() => {}));
+    useAuthSpy.mockReturnValue({
+      user: { username: "testuser" },
+      logout: vi.fn(),
+      loading: true,
+      error: null,
+    });
 
     render(<Dashboard />);
     expect(screen.getByText("Loading...")).toBeInTheDocument();
@@ -35,7 +42,7 @@ describe("Dashboard", () => {
 
   it("displays todos after loading", async () => {
     const mockTodos = [{ _id: "1", title: "Test Todo", completed: false }];
-    todosAPI.getTodos.mockResolvedValue(mockTodos);
+    getTodosSpy.mockResolvedValue(mockTodos);
 
     render(<Dashboard />);
 
@@ -46,7 +53,13 @@ describe("Dashboard", () => {
   });
 
   it("displays error message when fetch fails", async () => {
-    todosAPI.getTodos.mockRejectedValue(new Error("Failed to fetch"));
+    getTodosSpy.mockRejectedValue(new Error("Failed to fetch"));
+    useAuthSpy.mockReturnValue({
+      user: { username: "testuser" },
+      logout: vi.fn(),
+      loading: false,
+      error: "Failed to fetch",
+    });
 
     render(<Dashboard />);
 
