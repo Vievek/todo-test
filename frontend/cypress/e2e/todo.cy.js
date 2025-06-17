@@ -38,7 +38,7 @@ describe("Todo App", () => {
     cy.get('button[type="submit"]').click();
 
     // Create todo
-    cy.get('input[placeholder="Add a new todo"]').type("Test Todo{enter}");
+    cy.get('input[placeholder="Add a new todo..."]').type("Test Todo{enter}");
     cy.wait("@createTodo");
     cy.contains("Test Todo").should("exist");
 
