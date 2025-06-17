@@ -35,7 +35,8 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       navigate("/");
     } catch (err) {
-      setError(err.message);
+      // Improved error handling to extract message from axios error shape
+      setError(err.response?.data?.message || err.message || "Login failed");
     }
   };
 
@@ -45,7 +46,9 @@ export const AuthProvider = ({ children }) => {
       await authRegister(credentials);
       navigate("/login");
     } catch (err) {
-      setError(err.message);
+      setError(
+        err.response?.data?.message || err.message || "Registration failed"
+      );
     }
   };
 
